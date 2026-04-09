@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Rockdale — клиент для Minecraft, подписка, лаунчер для Windows." />
+  <title>Rockdale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <header class="header">
+    <a class="logo" href="#top">R<span class="logo-accent">o</span>ckdale</a>
+    <button class="nav-toggle" type="button" aria-label="Открыть меню" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="#download">Скачать</a>
+      <a href="#pricing">Тарифы</a>
+      <a href="#features">Особенности</a>
+      <a href="#account">Аккаунт</a>
+      <a href="#contact" class="nav-cta">Связь</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <p id="firebase-banner" class="firebase-banner" hidden></p>
+
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <p class="hero-kicker">Minecraft · клиент Rockdale</p>
+        <h1 class="hero-title">
+          <span class="hero-brand">R<span class="logo-accent">o</span>ckdale</span>
+          <span class="hero-line">функционал, обновления, подписка</span>
+        </h1>
+        <p class="hero-lead">
+          Скачайте лаунчер для Windows, оформите подписку на FunPay и активируйте ключ в личном кабинете.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://www.dropbox.com/scl/fi/tjknmoxpg1px555ta25zj/loader.exe?rlkey=kdkrw6kg1v88pekdy1sabgxqe&st=6dsefa8z&dl=1" rel="noopener noreferrer">Скачать лаунчер (.exe)</a>
+          <a class="btn btn-ghost" href="#pricing">Купить подписку</a>
+        </div>
+      </div>
+      <div class="hero-scroll">
+        <span>Листайте</span>
+        <span class="hero-scroll-line"></span>
+      </div>
+    </section>
+
+    <section id="download" class="section download">
+      <div class="container">
+        <div class="download-card">
+          <div class="download-icon" aria-hidden="true"></div>
+          <div class="download-text">
+            <h2>Лаунчер Rockdale</h2>
+            <p>Файл <code>loader.exe</code> — для Windows. После загрузки запустите его и следуйте подсказкам.</p>
+            <p class="download-note">Если браузер предупреждает о файле, используйте «Подробнее» → «Сохранить».</p>
+          </div>
+          <a class="btn btn-primary btn-download" href="https://www.dropbox.com/scl/fi/tjknmoxpg1px555ta25zj/loader.exe?rlkey=kdkrw6kg1v88pekdy1sabgxqe&st=6dsefa8z&dl=1" rel="noopener noreferrer">Скачать с Dropbox</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section pricing">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">01</span>
+          <h2>Тарифы</h2>
+          <p class="section-desc">Оплата через FunPay. После покупки вы получите ключ — активируйте его в разделе «Аккаунт».</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="price-card">
+            <span class="price-badge">14 дней</span>
+            <h3>Старт</h3>
+            <p class="price-note">Короткий доступ для пробы</p>
+            <a class="btn btn-primary btn-block" data-funpay href="#">Купить на FunPay</a>
+          </article>
+          <article class="price-card price-card--featured">
+            <span class="price-badge price-badge--hot">1 год</span>
+            <h3>Год</h3>
+            <p class="price-note">Выгодно на длительный срок</p>
+            <a class="btn btn-primary btn-block" data-funpay href="#">Купить на FunPay</a>
+          </article>
+          <article class="price-card">
+            <span class="price-badge">Навсегда</span>
+            <h3>Навсегда</h3>
+            <p class="price-note">Без срока окончания</p>
+            <a class="btn btn-primary btn-block" data-funpay href="#">Купить на FunPay</a>
+          </article>
+        </div>
+        <p class="pricing-funpay">Все кнопки ведут в профиль продавца на <a href="https://funpay.com/users/11584581/" target="_blank" rel="noopener noreferrer">FunPay</a> — выберите нужный лот и оформите заказ.</p>
+      </div>
+    </section>
+
+    <section id="features" class="section services">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">02</span>
+          <h2>Особенности</h2>
+        </div>
+        <div class="cards cards--two">
+          <article class="card">
+            <span class="card-num">01</span>
+            <h3>Хороший функционал</h3>
+            <p>Продуманные возможности и стабильная работа — всё необходимое под рукой.</p>
+          </article>
+          <article class="card">
+            <span class="card-num">02</span>
+            <h3>Частые обновления</h3>
+            <p>Регулярные выпуски: исправления, улучшения и нововведения.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="account" class="section account">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-label">03</span>
+          <h2>Аккаунт и ключ</h2>
+          <p class="section-desc">Зарегистрируйтесь, войдите и введите ключ подписки. Промокод при активации добавляет бонусные дни к сроку (если промокод создан в админке).</p>
+        </div>
+        <div id="account-root" class="account-grid">
+          <div id="auth-guest" class="auth-column">
+            <h3 class="auth-title">Регистрация</h3>
+            <div class="auth-fields">
+              <label><span>Ник / имя</span><input id="reg-name" type="text" autocomplete="nickname" placeholder="Как к вам обращаться" /></label>
+              <label><span>Email</span><input id="reg-email" type="email" autocomplete="email" placeholder="mail@example.com" /></label>
+              <label><span>Пароль</span><input id="reg-pass" type="password" autocomplete="new-password" placeholder="Не менее 6 символов" /></label>
+              <label><span>Промокод при регистрации</span><input id="reg-promo" type="text" autocomplete="off" placeholder="Необязательно, для учёта" /></label>
+              <button id="btn-register" type="button" class="btn btn-primary">Создать аккаунт</button>
+            </div>
+            <h3 class="auth-title auth-title--second">Вход</h3>
+            <div class="auth-fields">
+              <label><span>Email</span><input id="login-email" type="email" autocomplete="email" /></label>
+              <label><span>Пароль</span><input id="login-pass" type="password" autocomplete="current-password" /></label>
+              <button id="btn-login" type="button" class="btn btn-ghost">Войти</button>
+            </div>
+          </div>
+          <div id="auth-user" class="auth-column" hidden>
+            <h3 class="auth-title">Вы вошли</h3>
+            <p class="user-line"><strong>Email:</strong> <span id="user-email"></span></p>
+            <p class="user-line"><strong>Подписка:</strong> <span id="sub-status">—</span></p>
+            <button id="btn-logout" type="button" class="btn btn-ghost">Выйти</button>
+            <h3 class="auth-title auth-title--second">Активировать ключ</h3>
+            <div class="auth-fields">
+              <label><span>Ключ подписки</span><input id="redeem-key" type="text" autocomplete="off" placeholder="Вставьте ключ с FunPay" /></label>
+              <label><span>Промокод (при активации)</span><input id="redeem-promo" type="text" autocomplete="off" placeholder="Бонусные дни к сроку" /></label>
+              <button id="btn-redeem" type="button" class="btn btn-primary">Активировать</button>
+            </div>
+          </div>
+        </div>
+        <p id="auth-msg" class="auth-msg auth-msg--wide" role="status"></p>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact">
+      <div class="container contact-inner">
+        <div class="contact-copy">
+          <span class="section-label">04</span>
+          <h2>Связь</h2>
+          <p>Вопросы по Rockdale и покупкам — через FunPay или форму ниже.</p>
+        </div>
+        <form class="contact-form" action="#" method="post">
+          <label>
+            <span>Имя</span>
+            <input type="text" name="name" autocomplete="name" required placeholder="Как к вам обращаться" />
+          </label>
+          <label>
+            <span>Email</span>
+            <input type="email" name="email" autocomplete="email" required placeholder="you@company.com" />
+          </label>
+          <label class="full">
+            <span>Сообщение</span>
+            <textarea name="message" rows="4" required placeholder="Кратко опишите вопрос"></textarea>
+          </label>
+          <button class="btn btn-primary" type="submit">Отправить</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <a class="logo footer-logo" href="#top">R<span class="logo-accent">o</span>ckdale</a>
+      <p class="footer-copy">© <span id="year"></span> Rockdale</p>
+      <div class="footer-links">
+        <a href="https://funpay.com/users/11584581/" target="_blank" rel="noopener noreferrer">FunPay</a>
+        <a href="mailto:hello@wind.studio">hello@wind.studio</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
+  <script type="module" src="auth-app.js"></script>
+</body>
+</html>

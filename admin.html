@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rockdale — админ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600&family=Outfit:wght@600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { min-height: 100vh; padding: 2rem 1rem 4rem; }
+    .admin-wrap { max-width: 520px; margin: 0 auto; }
+    .admin-wrap h1 { font-family: var(--font-display); margin-top: 0; }
+    .admin-wrap p { color: var(--text-muted); font-size: 0.95rem; }
+    .admin-field { margin-bottom: 1rem; }
+    .admin-field label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+    .admin-field input, .admin-field select { width: 100%; padding: 0.65rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-family: inherit; }
+    #key-output { word-break: break-all; padding: 1rem; background: var(--bg-card); border-radius: 8px; margin-top: 0.75rem; font-family: ui-monospace, monospace; font-size: 0.9rem; color: var(--accent); }
+    #admin-status { margin: 1rem 0; font-size: 0.9rem; color: var(--accent); }
+    .admin-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <h1>R<span style="color: var(--accent)">o</span>ckdale — админ</h1>
+    <p>Доступ только для UID, указанного в Firestore в коллекции <code>admins</code>. Один раз создайте документ с ID = ваш UID из Firebase Authentication.</p>
+    <p id="admin-status"></p>
+
+    <div id="admin-login">
+      <div class="admin-field">
+        <label>Email</label>
+        <input id="admin-email" type="email" autocomplete="username" />
+      </div>
+      <div class="admin-field">
+        <label>Пароль</label>
+        <input id="admin-pass" type="password" autocomplete="current-password" />
+      </div>
+      <button type="button" class="btn btn-primary" id="admin-do-login">Войти</button>
+    </div>
+
+    <div id="admin-panel" hidden>
+      <button type="button" class="btn btn-ghost" id="admin-logout" style="margin-bottom:1.5rem">Выйти</button>
+
+      <h2 style="font-family:var(--font-display);font-size:1.1rem">Новый ключ подписки</h2>
+      <div class="admin-field">
+        <label>Тип</label>
+        <select id="key-tier">
+          <option value="14d">14 дней</option>
+          <option value="1y">1 год</option>
+          <option value="lifetime">Навсегда</option>
+        </select>
+      </div>
+      <div class="admin-actions">
+        <button type="button" class="btn btn-primary" id="gen-key">Сгенерировать и сохранить</button>
+      </div>
+      <pre id="key-output" hidden></pre>
+
+      <h2 style="font-family:var(--font-display);font-size:1.1rem;margin-top:2rem">Промокод</h2>
+      <p>Бонусные дни добавляются к сроку при активации ключа (если лимит uses не исчерпан).</p>
+      <div class="admin-field">
+        <label>Код (латиница, будет в верхнем регистре)</label>
+        <input id="promo-code" type="text" placeholder="SUMMER2026" />
+      </div>
+      <div class="admin-field">
+        <label>Бонус, дней</label>
+        <input id="promo-bonus" type="number" min="0" value="3" />
+      </div>
+      <div class="admin-field">
+        <label>Максимум активаций</label>
+        <input id="promo-max" type="number" min="1" value="100" />
+      </div>
+      <button type="button" class="btn btn-primary" id="save-promo">Сохранить промокод</button>
+    </div>
+  </div>
+
+  <script src="firebase-config.js"></script>
+  <script type="module" src="admin-app.js"></script>
+</body>
+</html>
