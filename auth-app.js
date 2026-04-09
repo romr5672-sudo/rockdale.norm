@@ -17,6 +17,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const FUNPAY_URL = "https://funpay.com/users/11584581/";
+const LAUNCHER_URL =
+  "https://www.dropbox.com/scl/fi/tjknmoxpg1px555ta25zj/loader.exe?rlkey=kdkrw6kg1v88pekdy1sabgxqe&st=6dsefa8z&dl=1";
 
 function tierDurationMs(tier) {
   if (tier === "14d") return 14 * 86400000;
@@ -56,22 +58,40 @@ function formatSub(sub) {
   }
 }
 
+function hasActiveSubscription(sub) {
+  if (!sub) return false;
+  if (sub.lifetime === true) return true;
+  if (!sub.expiresAt) return false;
+  try {
+    const t = sub.expiresAt.toMillis ? sub.expiresAt.toMillis() : new Date(sub.expiresAt).getTime();
+    return t > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function randomKey(len) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghijkmnpqrstuvwxyz";
+  let s = "";
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < len; i++) s += chars[arr[i] % chars.length];
+  return s;
+}
+
 function init() {
   const cfg = typeof window !== "undefined" ? window.__FIREBASE_CONFIG__ : null;
   const banner = document.getElementById("firebase-banner");
-  const accountRoot = document.getElementById("account-root");
 
   if (!cfg || !cfg.apiKey || cfg.apiKey.includes("ВАШ")) {
     if (banner) {
       banner.hidden = false;
       banner.textContent =
-        "Firebase: скопируйте firebase-config.example.js в firebase-config.js и вставьте ключи из консоли Firebase.";
+        "Firebase: заполните firebase-config.js ключами из консоли Firebase.";
     }
-    if (accountRoot) {
-      accountRoot.querySelectorAll("input, button, .auth-only").forEach(function (el) {
-        if (el.matches("input,button")) el.disabled = true;
-      });
-    }
+    document.querySelectorAll(".modal input, .modal button, #account-dashboard input, #account-dashboard button").forEach(function (el) {
+      if (el.matches("input")) el.disabled = true;
+    });
     return;
   }
 
@@ -82,10 +102,17 @@ function init() {
   const db = getFirestore(app);
 
   const el = {
-    authGuest: document.getElementById("auth-guest"),
-    authUser: document.getElementById("auth-user"),
+    headerDownload: document.getElementById("header-download-btn"),
+    headerGuest: document.getElementById("header-auth-guest"),
+    headerUser: document.getElementById("header-auth-user"),
+    headerLogout: document.getElementById("header-logout"),
+    accountGuestHint: document.getElementById("account-guest-hint"),
+    accountDashboard: document.getElementById("account-dashboard"),
     userEmail: document.getElementById("user-email"),
+    userDisplayName: document.getElementById("user-displayname"),
     subStatus: document.getElementById("sub-status"),
+    adminBadge: document.getElementById("admin-badge"),
+    adminPanel: document.getElementById("admin-panel"),
     regEmail: document.getElementById("reg-email"),
     regPass: document.getElementById("reg-pass"),
     regName: document.getElementById("reg-name"),
@@ -94,17 +121,53 @@ function init() {
     loginEmail: document.getElementById("login-email"),
     loginPass: document.getElementById("login-pass"),
     btnLogin: document.getElementById("btn-login"),
-    btnLogout: document.getElementById("btn-logout"),
     keyInput: document.getElementById("redeem-key"),
     promoInput: document.getElementById("redeem-promo"),
     btnRedeem: document.getElementById("btn-redeem"),
     authMsg: document.getElementById("auth-msg"),
+    modalLogin: document.getElementById("modal-login"),
+    modalRegister: document.getElementById("modal-register"),
+    adminKeyTier: document.getElementById("admin-key-tier"),
+    adminGenKey: document.getElementById("admin-gen-key"),
+    adminKeyOut: document.getElementById("admin-key-out"),
+    adminPromoCode: document.getElementById("admin-promo-code"),
+    adminPromoBonus: document.getElementById("admin-promo-bonus"),
+    adminPromoMax: document.getElementById("admin-promo-max"),
+    adminSavePromo: document.getElementById("admin-save-promo"),
   };
+
+  if (el.headerDownload) el.headerDownload.href = LAUNCHER_URL;
 
   function showMsg(text, ok) {
     if (!el.authMsg) return;
     el.authMsg.textContent = text;
-    el.authMsg.className = "auth-msg" + (ok === false ? " auth-msg--err" : ok === true ? " auth-msg--ok" : "");
+    el.authMsg.className =
+      "auth-msg auth-msg--wide" +
+      (ok === false ? " auth-msg--err" : ok === true ? " auth-msg--ok" : "");
+  }
+
+  async function ensureBootstrapAdmin(uid) {
+    await runTransaction(db, async function (transaction) {
+      const ref = doc(db, "config", "bootstrap");
+      const snap = await transaction.get(ref);
+      if (!snap.exists()) {
+        transaction.set(ref, {
+          adminUid: uid,
+          createdAt: serverTimestamp(),
+        });
+      }
+    });
+  }
+
+  async function loadIsAdmin(uid) {
+    const snap = await getDoc(doc(db, "config", "bootstrap"));
+    if (!snap.exists()) return false;
+    return snap.data().adminUid === uid;
+  }
+
+  function setDownloadVisible(show) {
+    if (!el.headerDownload) return;
+    el.headerDownload.hidden = !show;
   }
 
   async function refreshProfile(uid) {
@@ -112,25 +175,80 @@ function init() {
     const data = snap.data() || {};
     const sub = data.subscription;
     if (el.subStatus) el.subStatus.textContent = formatSub(sub);
+    if (el.userDisplayName) {
+      el.userDisplayName.textContent = data.displayName || "—";
+    }
+    setDownloadVisible(hasActiveSubscription(sub));
+
+    const isAdm = await loadIsAdmin(uid);
+    if (el.adminBadge) el.adminBadge.hidden = !isAdm;
+    if (el.adminPanel) el.adminPanel.hidden = !isAdm;
+    return { sub, isAdm, data };
   }
 
+  function openModal(name) {
+    const m = name === "login" ? el.modalLogin : el.modalRegister;
+    if (!m) return;
+    m.hidden = false;
+    document.body.style.overflow = "hidden";
+    const focusEl = m.querySelector("input");
+    if (focusEl) focusEl.focus();
+  }
+
+  function closeModals() {
+    if (el.modalLogin) el.modalLogin.hidden = true;
+    if (el.modalRegister) el.modalRegister.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  document.querySelectorAll("[data-open-modal]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      openModal(btn.getAttribute("data-open-modal"));
+    });
+  });
+
+  document.querySelectorAll("[data-close-modal]").forEach(function (node) {
+    node.addEventListener("click", closeModals);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeModals();
+  });
+
   onAuthStateChanged(auth, async function (user) {
-    if (!el.authGuest || !el.authUser) return;
+    closeModals();
     if (user) {
-      el.authGuest.hidden = true;
-      el.authUser.hidden = false;
+      try {
+        await ensureBootstrapAdmin(user.uid);
+      } catch (err) {
+        console.warn("bootstrap", err);
+      }
+      if (el.headerGuest) el.headerGuest.hidden = true;
+      if (el.headerUser) el.headerUser.hidden = false;
+      if (el.accountGuestHint) el.accountGuestHint.hidden = true;
+      if (el.accountDashboard) el.accountDashboard.hidden = false;
       if (el.userEmail) el.userEmail.textContent = user.email || "";
       try {
         await refreshProfile(user.uid);
       } catch (e) {
-        if (el.subStatus) el.subStatus.textContent = "Не удалось загрузить профиль";
+        if (el.subStatus) el.subStatus.textContent = "Ошибка загрузки";
+        setDownloadVisible(false);
       }
     } else {
-      el.authGuest.hidden = false;
-      el.authUser.hidden = true;
+      if (el.headerGuest) el.headerGuest.hidden = false;
+      if (el.headerUser) el.headerUser.hidden = true;
+      if (el.accountGuestHint) el.accountGuestHint.hidden = false;
+      if (el.accountDashboard) el.accountDashboard.hidden = true;
+      setDownloadVisible(false);
       showMsg("");
     }
   });
+
+  if (el.headerLogout) {
+    el.headerLogout.addEventListener("click", function () {
+      signOut(auth);
+    });
+  }
 
   if (el.btnReg) {
     el.btnReg.addEventListener("click", async function () {
@@ -151,6 +269,8 @@ function init() {
           signupPromo: promo || null,
           createdAt: serverTimestamp(),
         });
+        await ensureBootstrapAdmin(cred.user.uid);
+        closeModals();
         showMsg("Аккаунт создан.", true);
       } catch (e) {
         showMsg(e.message || "Ошибка регистрации", false);
@@ -165,16 +285,11 @@ function init() {
       const pass = (el.loginPass && el.loginPass.value) || "";
       try {
         await signInWithEmailAndPassword(auth, email, pass);
-        showMsg("Вошли.", true);
+        closeModals();
+        showMsg("Добро пожаловать.", true);
       } catch (e) {
         showMsg(e.message || "Ошибка входа", false);
       }
-    });
-  }
-
-  if (el.btnLogout) {
-    el.btnLogout.addEventListener("click", function () {
-      signOut(auth);
     });
   }
 
@@ -183,7 +298,7 @@ function init() {
       showMsg("");
       const user = auth.currentUser;
       if (!user) {
-        showMsg("Сначала войдите в аккаунт.", false);
+        showMsg("Войдите в аккаунт.", false);
         return;
       }
       const keyId = ((el.keyInput && el.keyInput.value) || "").trim();
@@ -210,7 +325,7 @@ function init() {
             const prRef = doc(db, "promoCodes", promoCode);
             const prSnap = await transaction.get(prRef);
             if (!prSnap.exists()) {
-              promoWarning = "Промокод не найден — подписка по ключу без бонуса.";
+              promoWarning = "Промокод не найден — без бонуса.";
             } else {
               const p = prSnap.data();
               const now = Date.now();
@@ -227,7 +342,7 @@ function init() {
                 bonusMs = (Number(p.bonusDays) || 0) * 86400000;
                 transaction.update(prRef, { uses: p.uses + 1 });
               } else {
-                promoWarning = "Промокод недействителен или закончился.";
+                promoWarning = "Промокод недействителен.";
               }
             }
           }
@@ -253,6 +368,69 @@ function init() {
         await refreshProfile(user.uid);
       } catch (e) {
         showMsg(e.message || "Не удалось активировать ключ", false);
+      }
+    });
+  }
+
+  if (el.adminGenKey) {
+    el.adminGenKey.addEventListener("click", async function () {
+      showMsg("");
+      const user = auth.currentUser;
+      if (!user) return;
+      const ok = await loadIsAdmin(user.uid);
+      if (!ok) {
+        showMsg("Нет прав администратора.", false);
+        return;
+      }
+      const tier = (el.adminKeyTier && el.adminKeyTier.value) || "14d";
+      const key = randomKey(24);
+      try {
+        await setDoc(doc(db, "licenseKeys", key), {
+          tier: tier,
+          used: false,
+          createdAt: serverTimestamp(),
+        });
+        if (el.adminKeyOut) {
+          el.adminKeyOut.textContent = key;
+          el.adminKeyOut.hidden = false;
+        }
+        showMsg("Ключ создан.", true);
+      } catch (e) {
+        showMsg(e.message || "Ошибка создания ключа", false);
+      }
+    });
+  }
+
+  if (el.adminSavePromo) {
+    el.adminSavePromo.addEventListener("click", async function () {
+      showMsg("");
+      const user = auth.currentUser;
+      if (!user) return;
+      const ok = await loadIsAdmin(user.uid);
+      if (!ok) {
+        showMsg("Нет прав администратора.", false);
+        return;
+      }
+      const code = ((el.adminPromoCode && el.adminPromoCode.value) || "")
+        .trim()
+        .toUpperCase();
+      const bonus = parseInt((el.adminPromoBonus && el.adminPromoBonus.value) || "0", 10) || 0;
+      const maxUses = parseInt((el.adminPromoMax && el.adminPromoMax.value) || "100", 10) || 100;
+      if (code.length < 3) {
+        showMsg("Код промокода не короче 3 символов.", false);
+        return;
+      }
+      try {
+        await setDoc(doc(db, "promoCodes", code), {
+          active: true,
+          bonusDays: bonus,
+          maxUses: maxUses,
+          uses: 0,
+          createdAt: serverTimestamp(),
+        });
+        showMsg("Промокод «" + code + "» сохранён.", true);
+      } catch (e) {
+        showMsg(e.message || "Ошибка", false);
       }
     });
   }

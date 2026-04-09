@@ -26,6 +26,12 @@
     });
   });
 
+  document.querySelectorAll("[data-open-modal]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setOpen(false);
+    });
+  });
+
   window.addEventListener("resize", function () {
     if (window.innerWidth > 768) setOpen(false);
   });

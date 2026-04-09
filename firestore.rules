@@ -2,14 +2,18 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
+    function isMainAdmin() {
       return request.auth != null
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        && exists(/databases/$(database)/documents/config/bootstrap)
+        && get(/databases/$(database)/documents/config/bootstrap).data.adminUid == request.auth.uid;
     }
 
-    match /admins/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false;
+    match /config/bootstrap {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && !exists(/databases/$(database)/documents/config/bootstrap)
+        && request.resource.data.adminUid == request.auth.uid;
+      allow update, delete: if false;
     }
 
     match /users/{userId} {
@@ -20,7 +24,7 @@ service cloud.firestore {
     }
 
     match /licenseKeys/{key} {
-      allow create: if isAdmin()
+      allow create: if isMainAdmin()
         && key.size() >= 16
         && request.resource.data.used == false
         && request.resource.data.tier in ["14d", "1y", "lifetime"];
@@ -33,15 +37,15 @@ service cloud.firestore {
         && request.resource.data.usedBy == request.auth.uid
         && request.resource.data.tier == resource.data.tier;
 
-      allow delete: if isAdmin();
+      allow delete: if isMainAdmin();
     }
 
     match /promoCodes/{code} {
-      allow create: if isAdmin() && code.size() >= 3;
+      allow create: if isMainAdmin() && code.size() >= 3;
 
       allow read: if request.auth != null && code.size() >= 3;
 
-      allow update: if isAdmin()
+      allow update: if isMainAdmin()
         || (
           request.auth != null
           && resource.data.active == true
@@ -52,7 +56,7 @@ service cloud.firestore {
           && request.resource.data.uses == resource.data.uses + 1
         );
 
-      allow delete: if isAdmin();
+      allow delete: if isMainAdmin();
     }
   }
 }
